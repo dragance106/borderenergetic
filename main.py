@@ -4,22 +4,23 @@ import multiprocessing
 import os
 import subprocess as sp
 
-n = 9                   # number of vertices
-total_parts = 10        # total number of parts (at least 200 for serious business :)
+n = 12                    # number of vertices
+total_parts = 5000        # total number of parts (at least 200 for serious business :)
 
 def run_be(part):
     print(f'Processing part {part}...')
 
     # has this part been already processed - maybe computer crashed in the meantime?
     cwd = os.getcwd()
+    graphs_file = os.path.join(cwd, f'be-part-{part}')
     results_file = os.path.join(cwd, f'be-part-{part}-results.csv')
-    if os.path.isfile(results_file):
-        print(f'Results file for part {part} already exists - skipping repeated processing...')
+    if os.path.isfile(results_file) and not os.path.isfile(graphs_file):
+        print(f'Part {part} already processed - skipping it for now...')
         return results_file
 
     # put geng in the current directory and
     # then call it to generate graphs in this part
-    cmd = f'./geng {n} {part}/{total_parts} > be-part-{part}'
+    cmd = f'./geng {n} {part}/{total_parts} > {graphs_file}'
     try:
         sp.check_call(cmd, shell=True)
     except sp.CalledProcessError:
@@ -67,4 +68,10 @@ if __name__ == '__main__':
     fout = open(f'be-total-{n}-results.csv', 'w')
     for item in combined_data:
         fout.write(item)
+    fout.close()
+
+    # write the missing parts as well
+    fout = open(f'be-missing-parts-{n}.csv', 'w')
+    for item in missing_parts:
+        fout.write(str(item) + '\n')
     fout.close()
